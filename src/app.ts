@@ -1,10 +1,11 @@
 import fastify, { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { Client, LocalAuth } from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
-import { sendRoute } from "./routes/send";
-import { sendBulkRoute } from "./routes/sendBulk";
-import { createGroupRoute } from "./routes/createGroup";
-import { sendPollRoute } from "./routes/sendPoll";
+import { sendRoute } from "./routes/Send";
+import { sendBulkRoute } from "./routes/SendBulk";
+import { createGroupRoute } from "./routes/CreateGroup";
+import { sendPollRoute } from "./routes/SendPoll";
+import { sendMessageAndPollRoute } from "./routes/SendMenssageAndPoll";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -54,4 +55,5 @@ export const app = async (
   fastify.register(sendBulkRoute);
   fastify.register(createGroupRoute);
   fastify.register(sendPollRoute);
+  fastify.register(sendMessageAndPollRoute);
 };

@@ -1,11 +1,5 @@
 import { Client, Poll, PollSendOptions } from "whatsapp-web.js";
 
-interface Contact {
-  name: string;
-  number: string;
-  message?: string;
-}
-
 const formatPhoneNumber = (number: string): string => {
   let formattedNumber = number.replace(/[\s()-]/g, "");
 
@@ -89,5 +83,32 @@ export class WhatsAppService {
   public async sendMessage(number: string, message: string): Promise<void> {
     const formattedNumber = formatPhoneNumber(number);
     await this.client.sendMessage(`${formattedNumber}@c.us`, message);
+  }
+
+  public async sendMessageAndPoll(
+    names: string[],
+    message: string,
+    pollQuestion: string,
+    pollOptions: string[],
+    allowMultipleAnswers: boolean = false,
+    messageSecret?: number[]
+  ): Promise<void> {
+    const contacts = await this.client.getContacts();
+    const options: PollSendOptions = {
+      allowMultipleAnswers: allowMultipleAnswers,
+      messageSecret: messageSecret ?? [],
+    };
+
+    for (const name of names) {
+      const contact = contacts.find(
+        (c) => c.name === name || c.pushname === name || c.shortName === name
+      );
+      if (contact) {
+        await this.client.sendMessage(contact.id._serialized, message);
+        //@ts-ignore
+        const poll = new Poll(pollQuestion, pollOptions, options);
+        await this.client.sendMessage(contact.id._serialized, poll);
+      }
+    }
   }
 }
