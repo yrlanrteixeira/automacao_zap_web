@@ -1,44 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { WhatsAppService } from "../services/whatsApp-service";
-
-interface CreateGroupRequest {
-  groupName: string;
-  names: string[];
-}
-
-interface CreateMultipleGroupsRequest {
-  groupNames: string[];
-  names: string[];
-  minInterval: number;
-  maxInterval: number; // intervalo mínimo e máximo em milissegundos
-}
-
-interface SendMessageAndPoll {
-  names: string[];
-  message: string;
-  pollQuestion: string;
-  pollOptions: string[];
-  allowMultipleAnswers?: boolean;
-  messageSecret?: number[];
-}
-
-interface SendMessagesRequest {
-  names: string[];
-  message: string;
-}
-
-interface SendMessageQuery {
-  number: string;
-  message: string;
-}
-
-interface SendPollRequest {
-  names: string[];
-  pollQuestion: string;
-  pollOptions: string[];
-  allowMultipleAnswers?: boolean;
-  messageSecret?: number[];
-}
+import {
+  CreateGroupRequest,
+  CreateMultipleGroupsRequest,
+  SendMessageAndPoll,
+  SendMessagesRequest,
+  SendMessageQuery,
+  SendPollRequest,
+} from "../interfaces";
 
 export const routes = async (
   fastify: FastifyInstance,
@@ -49,10 +18,17 @@ export const routes = async (
   fastify.post<{
     Body: CreateGroupRequest;
   }>("/createGroup", async (request, reply) => {
-    const { groupName, names } = request.body;
+    const { groupName, names, description, admins, setInfoAdminsOnly } =
+      request.body;
 
     try {
-      await whatsappService.createGroupByName(groupName, names);
+      await whatsappService.createGroupByName(
+        groupName,
+        names,
+        description,
+        admins,
+        setInfoAdminsOnly
+      );
       reply.send({ status: "Group created" });
     } catch (error) {
       reply.send({
@@ -65,14 +41,25 @@ export const routes = async (
   fastify.post<{
     Body: CreateMultipleGroupsRequest;
   }>("/createMultipleGroups", async (request, reply) => {
-    const { groupNames, names, minInterval, maxInterval } = request.body;
+    const {
+      groupNames,
+      names,
+      minInterval,
+      maxInterval,
+      description,
+      admins,
+      setInfoAdminsOnly,
+    } = request.body;
 
     try {
       await whatsappService.createMultipleGroups(
         groupNames,
         names,
         minInterval,
-        maxInterval
+        maxInterval,
+        description,
+        admins,
+        setInfoAdminsOnly
       );
       reply.send({ status: "Groups created" });
     } catch (error) {

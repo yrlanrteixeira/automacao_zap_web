@@ -1,4 +1,11 @@
-import { Client, Poll, PollSendOptions } from "whatsapp-web.js";
+import {
+  Client,
+  GroupChat,
+  Poll,
+  PollSendOptions,
+  ChatId,
+} from "whatsapp-web.js";
+import { randomInt } from "crypto";
 
 const formatPhoneNumber = (number: string): string => {
   let formattedNumber = number.replace(/[\s()-]/g, "");
@@ -14,15 +21,34 @@ const formatPhoneNumber = (number: string): string => {
   return formattedNumber;
 };
 
-const getRandomInterval = (min: number, max: number): number => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
 export class WhatsAppService {
   private client: Client;
 
   constructor(client: Client) {
     this.client = client;
+  }
+
+  private async findContactsByName(names: string[]): Promise<ChatId[]> {
+    const contacts = await this.client.getContacts();
+    const contactIds: ChatId[] = [];
+    const notFound: string[] = [];
+
+    for (const name of names) {
+      const contact = contacts.find(
+        (c) => c.name === name || c.pushname === name || c.shortName === name
+      );
+      if (contact) {
+        contactIds.push(contact.id);
+      } else {
+        notFound.push(name);
+      }
+    }
+
+    if (notFound.length > 0) {
+      console.log(`Contacts not found: ${notFound.join(", ")}`);
+    }
+
+    return contactIds;
   }
 
   public async sendMessagesByName(
@@ -42,20 +68,46 @@ export class WhatsAppService {
 
   public async createGroupByName(
     groupName: string,
-    names: string[]
+    names: string[],
+    description?: string,
+    admins?: string[],
+    setInfoAdminsOnly?: boolean
   ): Promise<void> {
-    const contacts = await this.client.getContacts();
-    const participantIds = names
-      .map((name) => {
-        const contact = contacts.find(
-          (c) => c.name === name || c.pushname === name || c.shortName === name
-        );
-        return contact ? contact.id._serialized : null;
-      })
-      .filter((id) => id !== null);
-
+    const participantIds = await this.findContactsByName(names);
     if (participantIds.length > 0) {
-      await this.client.createGroup(groupName, participantIds);
+      const groupResult = await this.client.createGroup(
+        groupName,
+        participantIds.map((id) => id._serialized)
+      );
+
+      if (typeof groupResult !== "string") {
+        console.log(`Group ${groupName} created`);
+        const groupChat = (await this.client.getChatById(
+          groupResult.gid._serialized
+        )) as GroupChat;
+
+        if (description) {
+          await groupChat.setDescription(description);
+          console.log(`Description set for group ${groupName}`);
+        }
+
+        if (admins && admins.length > 0) {
+          const adminIds = await this.findContactsByName(admins);
+          await groupChat.promoteParticipants(
+            adminIds.map((id) => id._serialized)
+          );
+          console.log(`Admins promoted for group ${groupName}`);
+        }
+
+        if (setInfoAdminsOnly) {
+          await groupChat.setInfoAdminsOnly(true);
+          console.log(`Only admins can edit the group info for ${groupName}`);
+        }
+      } else {
+        console.log(`Error creating group: ${groupResult}`);
+      }
+    } else {
+      console.log(`No valid participants found for group: ${groupName}`);
     }
   }
 
@@ -63,12 +115,23 @@ export class WhatsAppService {
     groupNames: string[],
     names: string[],
     minInterval: number,
-    maxInterval: number
+    maxInterval: number,
+    description?: string,
+    admins?: string[],
+    setInfoAdminsOnly?: boolean
   ): Promise<void> {
     for (const groupName of groupNames) {
-      await this.createGroupByName(groupName, names);
-      console.log(`Group ${groupName} created`);
-      const interval = getRandomInterval(minInterval, maxInterval);
+      await this.createGroupByName(
+        groupName,
+        names,
+        description,
+        admins,
+        setInfoAdminsOnly
+      );
+      const interval =
+        Math.floor(Math.random() * (maxInterval - minInterval + 1)) +
+        minInterval;
+      console.log(`Waiting for ${interval}ms before creating the next group`);
       await new Promise((resolve) => setTimeout(resolve, interval));
     }
   }
