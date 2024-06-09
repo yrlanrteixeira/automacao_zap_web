@@ -14,6 +14,10 @@ const formatPhoneNumber = (number: string): string => {
   return formattedNumber;
 };
 
+const getRandomInterval = (min: number, max: number): number => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
 export class WhatsAppService {
   private client: Client;
 
@@ -52,6 +56,20 @@ export class WhatsAppService {
 
     if (participantIds.length > 0) {
       await this.client.createGroup(groupName, participantIds);
+    }
+  }
+
+  public async createMultipleGroups(
+    groupNames: string[],
+    names: string[],
+    minInterval: number,
+    maxInterval: number
+  ): Promise<void> {
+    for (const groupName of groupNames) {
+      await this.createGroupByName(groupName, names);
+      console.log(`Group ${groupName} created`);
+      const interval = getRandomInterval(minInterval, maxInterval);
+      await new Promise((resolve) => setTimeout(resolve, interval));
     }
   }
 
