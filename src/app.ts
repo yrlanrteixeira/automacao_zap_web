@@ -1,12 +1,15 @@
-import fastify, { FastifyInstance, FastifyPluginOptions } from "fastify";
+import { FastifyInstance, FastifyPluginOptions } from "fastify";
+import fastifyCors from "@fastify/cors";
 import { Client, LocalAuth } from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 import { routes } from "./routes/index";
+
 declare module "fastify" {
   interface FastifyInstance {
     whatsappClient: Client;
   }
 }
+
 const wwebVersion = "2.2412.54";
 
 export const app = async (
@@ -45,6 +48,18 @@ export const app = async (
   });
 
   client.initialize();
+
+  // Configurando o CORS
+  fastify.register(fastifyCors, {
+    origin: (origin, cb) => {
+      if (!origin || /localhost/.test(origin)) {
+        cb(null, true);
+        return;
+      }
+      cb(new Error("Not allowed"), false);
+    },
+    methods: ["GET", "PUT", "POST", "DELETE"],
+  });
 
   fastify.register(routes);
 };
