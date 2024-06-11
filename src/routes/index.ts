@@ -160,4 +160,17 @@ export const routes = async (
       });
     }
   });
+
+  fastify.get("/getQRCode", async (request, reply) => {
+    if (fastify.qrCode) {
+      reply.send({ qrCode: fastify.qrCode });
+    } else {
+      reply.status(404).send({ error: "QR Code not available" });
+    }
+  });
+
+  fastify.get("/connectionStatus", async (request, reply) => {
+    const isConnected = fastify.qrCode === null;
+    reply.send({ connected: isConnected });
+  });
 };

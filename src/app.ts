@@ -7,6 +7,7 @@ import { routes } from "./routes/index";
 declare module "fastify" {
   interface FastifyInstance {
     whatsappClient: Client;
+    qrCode: string | null;
   }
 }
 
@@ -29,13 +30,16 @@ export const app = async (
   });
 
   fastify.decorate("whatsappClient", client);
+  fastify.decorate("qrCode", null);
 
   client.on("qr", (qr: string) => {
+    fastify.qrCode = qr;
     qrcode.generate(qr, { small: true });
     console.log("QR RECEIVED", qr);
   });
 
   client.on("ready", () => {
+    fastify.qrCode = null;
     console.log("Client is ready!");
   });
 
