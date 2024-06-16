@@ -1,3 +1,4 @@
+import { fastify } from "fastify";
 import {
   Client,
   GroupChat,
@@ -5,7 +6,6 @@ import {
   PollSendOptions,
   ChatId,
 } from "whatsapp-web.js";
-import { randomInt } from "crypto";
 
 const formatPhoneNumber = (number: string): string => {
   let formattedNumber = number.replace(/[\s()-]/g, "");

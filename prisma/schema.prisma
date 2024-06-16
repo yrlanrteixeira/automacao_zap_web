@@ -1,0 +1,60 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Task {
+  id                         Int       @id @default(autoincrement())
+  task_id                    String?
+  task_name                  String?
+  pipe_id                    String?
+  status_escala              String?
+  data_solicitacao_escala    DateTime?
+  data_equipe_escalada       String?
+  tempo_solucao              String?
+  subarea_projeto            String?
+  filial_atendimento         String?
+  assignee                   String?
+  tamanho_evento             String?
+  produto                    String?
+  zig_tickets                String?
+  solucao                    String?
+  qtd_head                   Int?
+  evento_proprio_treinamento String?
+  qtd_coordenador            Int?
+  qtd_cco                    Int?
+  qtd_supervisor             Int?
+  qtd_tecnico                Int?
+  equipe_escalada            String?
+  orcamento                  String?
+  forma_pagamento_equipe     String?
+  valor_pagamento_equipe     String?
+  viagem                     String?
+  data_viagem                String?
+  hospedagem                 String?
+  qtd_cnh                    Int?
+  tipo_transporte            String?
+  tipo_alimentacao           String?
+  data_retirada_veiculo      DateTime?
+  data_retirada_equipamentos DateTime?
+  data_chegada_evento        DateTime?
+  data_inicio_golive         DateTime?
+  data_termino_golive        DateTime?
+  data_previsao_retorno      DateTime?
+  datas_golive               String?
+  endereco_evento            String?
+  credenciamento             String?
+  data_envio_credenciamento  DateTime?
+  credenciamento_attachment  String?
+  contrato_intermitente      String?
+  informacoes_adicionais     String?
+  cliente                    String?
+  chave_ativacao             String?
+  cod_evento                 String?
+  lote                       String?
+  createdAt                  DateTime  @default(now())
+}
