@@ -1,10 +1,4 @@
-import {
-  Client,
-  GroupChat,
-  Poll,
-  PollSendOptions,
-  ChatId,
-} from "whatsapp-web.js";
+import { Client, GroupChat, ChatId, MessageMedia } from "whatsapp-web.js";
 import { randomInt } from "crypto";
 
 const formatPhoneNumber = (number: string): string => {
@@ -71,8 +65,9 @@ export class WhatsAppService {
     names: string[],
     description?: string,
     admins?: string[],
+    photoPath?: string,
     setInfoAdminsOnly?: boolean
-  ): Promise<void> {
+  ): Promise<string> {
     const participantIds = await this.findContactsByName(names);
     if (participantIds.length > 0) {
       const groupResult = await this.client.createGroup(
@@ -86,9 +81,20 @@ export class WhatsAppService {
           groupResult.gid._serialized
         )) as GroupChat;
 
+        if (setInfoAdminsOnly) {
+          await groupChat.setInfoAdminsOnly(true);
+          console.log(`Info admins only set for group ${groupName}`);
+        }
+
         if (description) {
-          await groupChat.setDescription(description);
-          console.log(`Description set for group ${groupName}`);
+          try {
+            await groupChat.setDescription(description);
+            console.log(`Description set for group ${groupName}`);
+          } catch (error) {
+            console.error(
+              `Failed to set description for group ${groupName}: ${error}`
+            );
+          }
         }
 
         if (admins && admins.length > 0) {
@@ -99,16 +105,26 @@ export class WhatsAppService {
           console.log(`Admins promoted for group ${groupName}`);
         }
 
-        if (setInfoAdminsOnly) {
-          await groupChat.setInfoAdminsOnly(true);
-          console.log(`Only admins can edit the group info for ${groupName}`);
+        if (photoPath) {
+          try {
+            const media = MessageMedia.fromFilePath(photoPath);
+            await groupChat.setPicture(media);
+            console.log(`Photo set for group ${groupName}`);
+          } catch (error) {
+            console.error(
+              `Failed to set photo for group ${groupName}: ${error}`
+            );
+          }
         }
+        console.log(`Group ID: ${groupResult.gid._serialized}`);
+        return groupResult.gid._serialized;
       } else {
         console.log(`Error creating group: ${groupResult}`);
       }
     } else {
       console.log(`No valid participants found for group: ${groupName}`);
     }
+    return "";
   }
 
   public async createMultipleGroups(
@@ -117,22 +133,60 @@ export class WhatsAppService {
     minInterval: number,
     maxInterval: number,
     description?: string,
-    admins?: string[],
-    setInfoAdminsOnly?: boolean
+    admins?: string[]
   ): Promise<void> {
     for (const groupName of groupNames) {
-      await this.createGroupByName(
-        groupName,
-        names,
-        description,
-        admins,
-        setInfoAdminsOnly
-      );
-      const interval =
-        Math.floor(Math.random() * (maxInterval - minInterval + 1)) +
-        minInterval;
-      console.log(`Waiting for ${interval}ms before creating the next group`);
+      const interval = randomInt(minInterval, maxInterval);
       await new Promise((resolve) => setTimeout(resolve, interval));
+      await this.createGroupByName(groupName, names, description, admins);
+    }
+  }
+
+  public async createGroupsAndSendMessages(data: any[]): Promise<void> {
+    for (const groupData of data) {
+      const {
+        pessoa,
+        descricao,
+        evento,
+        respoGET,
+        planejador,
+        mensagem1,
+        mensagem2,
+        mensagem3,
+        mensagem4,
+      } = groupData;
+
+      const participantes = [pessoa];
+      const admins = [respoGET, planejador].filter(Boolean);
+      const photoPath = "src/assets/Logo_junino.png";
+
+      const groupId = await this.createGroupByName(
+        evento,
+        participantes,
+        descricao,
+        admins,
+        photoPath
+      );
+
+      if (groupId) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+
+        const mensagens = [mensagem1, mensagem2, mensagem3, mensagem4];
+        for (const mensagem of mensagens) {
+          if (mensagem) {
+            try {
+              console.log(`Sending message: ${mensagem}`);
+              await this.sendGroupMessage(groupId, mensagem);
+              console.log(`Message sent: ${mensagem}`);
+            } catch (error) {
+              console.error(
+                `Failed to send message: ${mensagem}. Error: ${error}`
+              );
+            }
+          }
+        }
+        console.log(`Messages sent for group: ${evento}`);
+      }
     }
   }
 
@@ -144,7 +198,7 @@ export class WhatsAppService {
     messageSecret?: number[]
   ): Promise<void> {
     const contacts = await this.client.getContacts();
-    const options: PollSendOptions = {
+    const options = {
       allowMultipleAnswers: allowMultipleAnswers,
       messageSecret: messageSecret ?? [],
     };
@@ -175,7 +229,7 @@ export class WhatsAppService {
     messageSecret?: number[]
   ): Promise<void> {
     const contacts = await this.client.getContacts();
-    const options: PollSendOptions = {
+    const options = {
       allowMultipleAnswers: allowMultipleAnswers,
       messageSecret: messageSecret ?? [],
     };
@@ -190,6 +244,18 @@ export class WhatsAppService {
         const poll = new Poll(pollQuestion, pollOptions, options);
         await this.client.sendMessage(contact.id._serialized, poll);
       }
+    }
+  }
+
+  public async sendGroupMessage(
+    groupId: string,
+    message: string
+  ): Promise<void> {
+    try {
+      await this.client.sendMessage(groupId, message);
+      console.log(`Message sent to group ${groupId}`);
+    } catch (error) {
+      console.error(`Failed to send message to group ${groupId}: ${error}`);
     }
   }
 }
