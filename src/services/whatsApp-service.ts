@@ -1,4 +1,11 @@
-import { Client, GroupChat, ChatId, MessageMedia } from "whatsapp-web.js";
+import {
+  Client,
+  GroupChat,
+  ChatId,
+  MessageMedia,
+  PollSendOptions,
+  Poll,
+} from "whatsapp-web.js";
 import { randomInt } from "crypto";
 
 const formatPhoneNumber = (number: string): string => {
@@ -198,7 +205,7 @@ export class WhatsAppService {
     messageSecret?: number[]
   ): Promise<void> {
     const contacts = await this.client.getContacts();
-    const options = {
+    const options: PollSendOptions = {
       allowMultipleAnswers: allowMultipleAnswers,
       messageSecret: messageSecret ?? [],
     };
@@ -229,7 +236,7 @@ export class WhatsAppService {
     messageSecret?: number[]
   ): Promise<void> {
     const contacts = await this.client.getContacts();
-    const options = {
+    const options: PollSendOptions = {
       allowMultipleAnswers: allowMultipleAnswers,
       messageSecret: messageSecret ?? [],
     };
@@ -239,7 +246,6 @@ export class WhatsAppService {
         (c) => c.name === name || c.pushname === name || c.shortName === name
       );
       if (contact) {
-        await this.client.sendMessage(contact.id._serialized, message);
         //@ts-ignore
         const poll = new Poll(pollQuestion, pollOptions, options);
         await this.client.sendMessage(contact.id._serialized, poll);
