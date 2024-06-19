@@ -246,6 +246,7 @@ export class WhatsAppService {
         (c) => c.name === name || c.pushname === name || c.shortName === name
       );
       if (contact) {
+        await this.client.sendMessage(contact.id._serialized, message);
         //@ts-ignore
         const poll = new Poll(pollQuestion, pollOptions, options);
         await this.client.sendMessage(contact.id._serialized, poll);
