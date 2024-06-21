@@ -52,12 +52,25 @@ export class WhatsAppService {
     const contacts = await this.client.getContacts();
     for (const name of names) {
       const contact = contacts.find(
-        (c) => c.name === name || c.pushname === name || c.shortName === name
+        (contact) =>
+          contact.name === name && contact.id._serialized.endsWith("@c.us")
       );
       if (contact) {
-        await this.client.sendMessage(contact.id._serialized, message);
+        const chat = await this.client.getChatById(contact.id._serialized);
+        await chat.sendMessage(message);
+        console.log(`Message sent to ${name}`);
       }
     }
+  }
+
+  public async listContacts(): Promise<any[]> {
+    const contacts = await this.client.getContacts();
+    return contacts.map((contact) => ({
+      name: contact.name,
+      pushname: contact.pushname,
+      shortName: contact.shortName,
+      id: contact.id._serialized,
+    }));
   }
 
   public async createGroupByName(

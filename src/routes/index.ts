@@ -194,6 +194,11 @@ export const routes = async (
     }
   });
 
+  fastify.get("/listContacts", async (request, reply) => {
+    const contacts = await whatsappService.listContacts();
+    reply.send({ contacts });
+  });
+
   fastify.get("/getQRCode", async (request, reply) => {
     if (fastify.qrCode) {
       reply.send({ qrCode: fastify.qrCode });
