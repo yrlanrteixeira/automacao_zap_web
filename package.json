@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/fastify-cors": "^2.1.0",
     "@types/fastify-multipart": "^0.7.0",
     "@types/node": "^20.12.12",
     "@types/qrcode-terminal": "^0.12.2",
@@ -22,6 +23,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@fastify/cors": "^9.0.1",
     "exceljs": "^4.4.0",
     "fastify": "^4.27.0",
     "fastify-multipart": "^5.4.0",
