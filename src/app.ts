@@ -20,7 +20,8 @@ export const app = async (
   const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-      headless: false, // ALTERAR PARA FALSE PARA VER NAVEGADOR EM AÇÃO
+    executablePath: '/snap/bin/chromium',
+      headless: true, // ALTERAR PARA FALSE PARA VER NAVEGADOR EM AÇÃO
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
     webVersionCache: {
