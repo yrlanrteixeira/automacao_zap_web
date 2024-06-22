@@ -211,4 +211,8 @@ export const routes = async (
     const isConnected = fastify.qrCode === null;
     reply.send({ connected: isConnected });
   });
+
+  fastify.get('/health', async (request, reply) => {
+    reply.send({ status: 'ok' });
+  })
 };
