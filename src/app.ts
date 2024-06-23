@@ -20,7 +20,7 @@ export const app = async (
   const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-    executablePath: '/snap/bin/chromium',
+      executablePath: "/snap/bin/chromium",
       headless: true, // ALTERAR PARA FALSE PARA VER NAVEGADOR EM AÇÃO
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
@@ -66,5 +66,5 @@ export const app = async (
     methods: ["GET", "PUT", "POST", "DELETE"],
   });
 
-  fastify.register(routes);
+  fastify.register(routes, { prefix: "/api" });
 };
