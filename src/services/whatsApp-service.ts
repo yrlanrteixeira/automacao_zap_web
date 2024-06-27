@@ -156,21 +156,34 @@ export class WhatsAppService {
   }
 
   public async createGroupsAndSendMessages(data: any[]): Promise<void> {
-    for (const groupData of data) {
-      const {
-        pessoa,
-        descricao,
-        evento,
-        respoGET,
-        planejador,
-        mensagem1,
-        mensagem2,
-        mensagem3,
-        mensagem4,
-      } = groupData;
+    const participantsMap = new Map<string, string[]>();
+    const descriptionMap = new Map<string, string>();
+    const adminsMap = new Map<string, string[]>();
 
-      const participantes = [pessoa];
-      const admins = [respoGET, planejador].filter(Boolean);
+    for (const groupData of data) {
+      const { pessoa, descricao, evento, respoGET, planejador } = groupData;
+
+      if (!participantsMap.has(evento)) {
+        participantsMap.set(evento, []);
+      }
+      participantsMap.get(evento)!.push(pessoa);
+
+      if (descricao) {
+        descriptionMap.set(evento, descricao);
+      }
+
+      if (respoGET || planejador) {
+        if (!adminsMap.has(evento)) {
+          adminsMap.set(evento, []);
+        }
+        if (respoGET) adminsMap.get(evento)!.push(respoGET);
+        if (planejador) adminsMap.get(evento)!.push(planejador);
+      }
+    }
+
+    for (const [evento, participantes] of participantsMap) {
+      const descricao = descriptionMap.get(evento);
+      const admins = adminsMap.get(evento);
       const photoPath = "src/assets/Logo_junino.png";
 
       const groupId = await this.createGroupByName(
@@ -184,17 +197,21 @@ export class WhatsAppService {
       if (groupId) {
         await new Promise((resolve) => setTimeout(resolve, 5000));
 
-        const mensagens = [mensagem1, mensagem2, mensagem3, mensagem4];
-        for (const mensagem of mensagens) {
-          if (mensagem) {
-            try {
-              console.log(`Sending message: ${mensagem}`);
-              await this.sendGroupMessage(groupId, mensagem);
-              console.log(`Message sent: ${mensagem}`);
-            } catch (error) {
-              console.error(
-                `Failed to send message: ${mensagem}. Error: ${error}`
-              );
+        for (const groupData of data.filter((gd) => gd.evento === evento)) {
+          const { mensagem1, mensagem2, mensagem3, mensagem4 } = groupData;
+          const mensagens = [mensagem1, mensagem2, mensagem3, mensagem4];
+
+          for (const mensagem of mensagens) {
+            if (mensagem) {
+              try {
+                console.log(`Sending message: ${mensagem}`);
+                await this.sendGroupMessage(groupId, mensagem);
+                console.log(`Message sent: ${mensagem}`);
+              } catch (error) {
+                console.error(
+                  `Failed to send message: ${mensagem}. Error: ${error}`
+                );
+              }
             }
           }
         }
