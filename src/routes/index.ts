@@ -32,7 +32,7 @@ export const routes = async (
         );
         reply.send({ status: "Group created" });
       } catch (error) {
-        reply.send({
+        reply.status(500).send({
           status: "Failed to create group",
           error: (error as Error).message,
         });
@@ -64,7 +64,7 @@ export const routes = async (
         );
         reply.send({ status: "Groups created" });
       } catch (error) {
-        reply.send({
+        reply.status(500).send({
           status: "Failed to create groups",
           error: (error as Error).message,
         });
@@ -95,7 +95,7 @@ export const routes = async (
         );
         reply.send({ status: "Message and poll sent" });
       } catch (error) {
-        reply.send({
+        reply.status(500).send({
           status: "Failed to send message and poll",
           error: (error as Error).message,
         });
@@ -112,7 +112,7 @@ export const routes = async (
         await whatsappService.sendMessagesByName(names, message);
         reply.send({ status: "Messages sent" });
       } catch (error) {
-        reply.send({
+        reply.status(500).send({
           status: "Failed to send messages",
           error: (error as Error).message,
         });
@@ -130,7 +130,7 @@ export const routes = async (
       await whatsappService.sendMessage(chatId, message);
       reply.send({ status: "Message sent" });
     } catch (error) {
-      reply.send({
+      reply.status(500).send({
         status: "Failed to send message",
         error: (error as Error).message,
       });
@@ -158,7 +158,7 @@ export const routes = async (
         );
         reply.send({ status: "Poll sent" });
       } catch (error) {
-        reply.send({
+        reply.status(500).send({
           status: "Failed to send poll",
           error: (error as Error).message,
         });
@@ -173,7 +173,7 @@ export const routes = async (
       await whatsappService.createGroupsAndSendMessages(data);
       reply.send({ status: "Groups created and messages sent" });
     } catch (error) {
-      reply.send({
+      reply.status(500).send({
         status: "Failed to process group data",
         error: (error as Error).message,
       });
@@ -187,7 +187,7 @@ export const routes = async (
       await whatsappService.sendGroupMessage(groupId, message);
       reply.send({ status: "Message sent to group" });
     } catch (error) {
-      reply.send({
+      reply.status(500).send({
         status: "Failed to send message to group",
         error: (error as Error).message,
       });
@@ -195,8 +195,15 @@ export const routes = async (
   });
 
   fastify.get("/listContacts", async (request, reply) => {
-    const contacts = await whatsappService.listContacts();
-    reply.send({ contacts });
+    try {
+      const contacts = await whatsappService.listContacts();
+      reply.send({ contacts });
+    } catch (error) {
+      reply.status(500).send({
+        status: "Failed to list contacts",
+        error: (error as Error).message,
+      });
+    }
   });
 
   fastify.get("/getQRCode", async (request, reply) => {
@@ -212,7 +219,7 @@ export const routes = async (
     reply.send({ connected: isConnected });
   });
 
-  fastify.get('/health', async (request, reply) => {
-    reply.send({ status: 'ok' });
-  })
+  fastify.get("/health", async (request, reply) => {
+    reply.send({ status: "ok" });
+  });
 };
